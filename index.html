@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0f766e">
+    <title>Akkordzeit</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Akkordarbeit</p>
+          <h1>Akkordzeit</h1>
+        </div>
+        <output id="statusBadge" class="status-badge">Ø 0%</output>
+      </header>
+
+      <section class="summary" aria-label="Berechnung">
+        <div>
+          <span>Gesamtzeit am Tag</span>
+          <strong id="totalTime">0 min</strong>
+        </div>
+        <div>
+          <span>Erreichte Prozent am Tag</span>
+          <strong id="percentage">0%</strong>
+        </div>
+      </section>
+
+      <form id="workForm" class="entry-form">
+        <label>
+          Datum
+          <input id="date" name="date" type="date" required>
+        </label>
+
+        <button type="button" id="calendarToggle" class="calendar-toggle" aria-expanded="false" aria-controls="calendarPanel">
+          Monatsübersicht anzeigen
+        </button>
+
+        <section id="calendarPanel" class="calendar-panel is-collapsed" aria-label="Monatsübersicht">
+          <div class="calendar-header">
+            <button type="button" id="previousMonth" class="calendar-nav" aria-label="Vorheriger Monat">‹</button>
+            <strong id="calendarTitle">Monat</strong>
+            <button type="button" id="nextMonth" class="calendar-nav" aria-label="Nächster Monat">›</button>
+          </div>
+          <div class="calendar-weekdays" aria-hidden="true">
+            <span>Mo</span>
+            <span>Di</span>
+            <span>Mi</span>
+            <span>Do</span>
+            <span>Fr</span>
+            <span>Sa</span>
+            <span>So</span>
+          </div>
+          <div id="calendarGrid" class="calendar-grid"></div>
+        </section>
+
+        <label>
+          Auftragsnr.
+          <input id="orderNumber" name="orderNumber" type="text" inputmode="numeric" autocomplete="off" placeholder="z. B. 4711">
+        </label>
+
+        <label>
+          Identnr.
+          <input id="identNumber" name="identNumber" type="text" autocomplete="off" placeholder="z. B. A-204">
+        </label>
+
+        <div class="field-row">
+          <label>
+            Stückzahl
+            <input id="quantity" name="quantity" type="number" min="0" step="1" inputmode="numeric" placeholder="0">
+          </label>
+
+          <label>
+            Zeit pro Teil
+            <div class="unit-input">
+              <input id="timePerPart" name="timePerPart" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0">
+              <span>min</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="field-row">
+          <label>
+            Rüstzeit
+            <div class="unit-input">
+              <input id="setupTime" name="setupTime" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0">
+              <span>min</span>
+            </div>
+          </label>
+
+          <label>
+            Arbeitszeit
+            <div class="unit-input">
+              <input id="availableTime" name="availableTime" type="number" min="0" step="1" inputmode="numeric" value="480">
+              <span>min</span>
+            </div>
+          </label>
+        </div>
+
+        <label>
+          Anmerkungen
+          <textarea id="notes" name="notes" rows="3" placeholder="z. B. Störung, Nacharbeit, Material fehlt"></textarea>
+        </label>
+
+        <button type="button" id="saveEntry" class="primary-action">Eintrag speichern</button>
+      </form>
+
+      <section class="history-section" aria-label="Gespeicherte Einträge">
+        <div class="section-heading">
+          <h2>Einträge</h2>
+          <button type="button" id="clearEntries" class="text-action">Leeren</button>
+        </div>
+        <ol id="entryList" class="entry-list"></ol>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
