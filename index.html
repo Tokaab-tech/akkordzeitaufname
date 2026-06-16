@@ -94,7 +94,7 @@
           <label>
             Arbeitszeit
             <div class="unit-input">
-              <input id="availableTime" name="availableTime" type="number" min="0" step="1" inputmode="numeric" value="480">
+              <input id="availableTime" name="availableTime" type="number" min="0" step="1" inputmode="numeric" value="420">
               <span>min</span>
             </div>
           </label>
@@ -115,7 +115,21 @@
         </div>
         <ol id="entryList" class="entry-list"></ol>
       </section>
+
+      <section class="tools-section" aria-label="Daten und Export">
+        <div class="section-heading">
+          <h2>Daten</h2>
+        </div>
+        <div class="action-grid">
+          <button type="button" id="exportBackup" class="secondary-action">Backup exportieren</button>
+          <button type="button" id="importBackup" class="secondary-action">Backup importieren</button>
+          <button type="button" id="exportMonthPdf" class="secondary-action">Monat als PDF</button>
+        </div>
+        <input id="backupFile" class="file-import" type="file" accept="application/json,.json">
+      </section>
     </main>
+
+    <section id="printReport" class="print-report" aria-label="Monatsbericht"></section>
 
     <script src="app.js"></script>
   </body>

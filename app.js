@@ -15,6 +15,11 @@ const statusBadge = document.querySelector("#statusBadge");
 const saveButton = document.querySelector("#saveEntry");
 const clearButton = document.querySelector("#clearEntries");
 const entryList = document.querySelector("#entryList");
+const exportBackupButton = document.querySelector("#exportBackup");
+const importBackupButton = document.querySelector("#importBackup");
+const backupFileInput = document.querySelector("#backupFile");
+const exportMonthPdfButton = document.querySelector("#exportMonthPdf");
+const printReport = document.querySelector("#printReport");
 const calendarToggle = document.querySelector("#calendarToggle");
 const calendarPanel = document.querySelector("#calendarPanel");
 const calendarTitle = document.querySelector("#calendarTitle");
@@ -93,6 +98,17 @@ function formatDate(year, month, day) {
     String(month + 1).padStart(2, "0"),
     String(day).padStart(2, "0"),
   ].join("-");
+}
+
+function formatDisplayDate(date) {
+  return new Date(`${date}T00:00:00`).toLocaleDateString("de-DE");
+}
+
+function getMonthTitle(monthKey) {
+  return new Date(`${monthKey}-01T00:00:00`).toLocaleDateString("de-DE", {
+    month: "long",
+    year: "numeric",
+  });
 }
 
 function getMonthlyAveragePercentage(selectedDate, draftTotal) {
@@ -189,6 +205,13 @@ function getEntriesForDate(date) {
   return entriesByDate[date] || [];
 }
 
+function getEntriesForMonth(monthKey) {
+  const entriesByDate = loadEntriesByDate();
+  return Object.entries(entriesByDate)
+    .filter(([date, entries]) => getMonthKey(date) === monthKey && entries.length > 0)
+    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB));
+}
+
 function setCalendarOpen(isOpen) {
   calendarPanel.classList.toggle("is-collapsed", !isOpen);
   calendarToggle.setAttribute("aria-expanded", String(isOpen));
@@ -242,7 +265,7 @@ function renderEntries() {
 
     const meta = document.createElement("p");
     meta.className = "entry-meta";
-    meta.textContent = `${entry.quantity} Stk. · ${entry.timePerPart} min/Teil · Faktor ${performanceFactor}`;
+    meta.textContent = `${entry.quantity} Stk. · ${entry.timePerPart} min/Teil · Rüstzeit ${entry.setupTime || 0} min · Faktor ${performanceFactor}`;
 
     const total = document.createElement("p");
     total.textContent = `${formatMinutes(entry.totalTime)} Gesamtzeit`;
@@ -382,6 +405,155 @@ function changeSelectedMonth(offset) {
   updateResults();
 }
 
+function downloadBlob(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportBackup() {
+  const backup = {
+    app: "Akkordzeit",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    storageKey,
+    entriesByDate: loadEntriesByDate(),
+  };
+  const fileName = `akkordzeit-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  downloadBlob(blob, fileName);
+}
+
+function importBackupFile(file) {
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    try {
+      const parsedBackup = JSON.parse(reader.result);
+      const importedEntries = normalizeEntriesByDate(parsedBackup.entriesByDate || parsedBackup);
+
+      if (!Object.keys(importedEntries).length) {
+        alert("In dieser Backup-Datei wurden keine Einträge gefunden.");
+        return;
+      }
+
+      const shouldImport = confirm("Backup importieren? Die aktuellen Einträge werden dadurch ersetzt.");
+      if (!shouldImport) {
+        return;
+      }
+
+      saveEntriesByDate(importedEntries);
+      renderEntries();
+      renderCalendar();
+      updateResults();
+      alert("Backup wurde importiert.");
+    } catch {
+      alert("Die Backup-Datei konnte nicht gelesen werden.");
+    } finally {
+      backupFileInput.value = "";
+    }
+  });
+  reader.readAsText(file);
+}
+
+function appendReportCell(row, text, tagName = "td") {
+  const cell = document.createElement(tagName);
+  cell.textContent = text;
+  row.append(cell);
+  return cell;
+}
+
+function renderMonthlyReport() {
+  const monthKey = getMonthKey(inputs.date.value);
+  const monthEntries = getEntriesForMonth(monthKey);
+  const allEntries = monthEntries.flatMap(([, entries]) => entries);
+  const monthTotal = sumEntries(allEntries);
+  const monthAverage = getMonthlyAveragePercentage(`${monthKey}-01`, { totalTime: 0, percentage: 0 });
+
+  printReport.innerHTML = "";
+
+  const title = document.createElement("h1");
+  title.textContent = `Akkordzeit Monatsbericht ${getMonthTitle(monthKey)}`;
+
+  const summary = document.createElement("div");
+  summary.className = "report-summary";
+  const summaryItems = [
+    ["Tage mit Einträgen", String(monthEntries.length)],
+    ["Gesamtzeit", formatMinutes(monthTotal.totalTime)],
+    ["Prozent gesamt", `${monthTotal.percentage}%`],
+    ["Ø Tagesprozent", `${monthAverage}%`],
+  ];
+
+  for (const [label, value] of summaryItems) {
+    const box = document.createElement("div");
+    const labelElement = document.createElement("span");
+    labelElement.textContent = label;
+    const valueElement = document.createElement("strong");
+    valueElement.textContent = value;
+    box.append(labelElement, valueElement);
+    summary.append(box);
+  }
+
+  const table = document.createElement("table");
+  const head = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  ["Datum", "Identnr.", "Auftragsnr.", "Stk.", "min/Teil", "Rüstzeit", "Gesamtzeit", "%", "Anmerkung"]
+    .forEach((heading) => appendReportCell(headRow, heading, "th"));
+  head.append(headRow);
+  table.append(head);
+
+  const body = document.createElement("tbody");
+
+  for (const [date, entries] of monthEntries) {
+    for (const entry of entries) {
+      const row = document.createElement("tr");
+      appendReportCell(row, formatDisplayDate(date));
+      appendReportCell(row, entry.identNumber || "-");
+      appendReportCell(row, entry.orderNumber || "-");
+      appendReportCell(row, entry.quantity ?? "0");
+      appendReportCell(row, entry.timePerPart ?? "0");
+      appendReportCell(row, entry.setupTime ?? "0");
+      appendReportCell(row, formatMinutes(entry.totalTime || 0));
+      appendReportCell(row, `${entry.percentage || 0}%`);
+      appendReportCell(row, entry.notes || "");
+      body.append(row);
+    }
+
+    const dayTotal = sumEntries(entries);
+    const totalRow = document.createElement("tr");
+    totalRow.className = "report-day-total";
+    appendReportCell(totalRow, `${formatDisplayDate(date)} Summe`);
+    appendReportCell(totalRow, "");
+    appendReportCell(totalRow, "");
+    appendReportCell(totalRow, "");
+    appendReportCell(totalRow, "");
+    appendReportCell(totalRow, "");
+    appendReportCell(totalRow, formatMinutes(dayTotal.totalTime));
+    appendReportCell(totalRow, `${dayTotal.percentage}%`);
+    appendReportCell(totalRow, "");
+    body.append(totalRow);
+  }
+
+  if (monthEntries.length === 0) {
+    const row = document.createElement("tr");
+    const cell = appendReportCell(row, "Für diesen Monat sind keine Einträge gespeichert.");
+    cell.colSpan = 9;
+    body.append(row);
+  }
+
+  table.append(body);
+  printReport.append(title, summary, table);
+}
+
+function exportMonthPdf() {
+  renderMonthlyReport();
+  window.print();
+}
+
 form.addEventListener("input", updateResults);
 inputs.date.addEventListener("change", () => {
   renderEntries();
@@ -403,6 +575,15 @@ nextMonthButton.addEventListener("click", () => changeSelectedMonth(1));
 calendarToggle.addEventListener("click", () => {
   setCalendarOpen(calendarPanel.classList.contains("is-collapsed"));
 });
+exportBackupButton.addEventListener("click", exportBackup);
+importBackupButton.addEventListener("click", () => backupFileInput.click());
+backupFileInput.addEventListener("change", () => {
+  const [file] = backupFileInput.files;
+  if (file) {
+    importBackupFile(file);
+  }
+});
+exportMonthPdfButton.addEventListener("click", exportMonthPdf);
 
 setToday();
 updateResults();
