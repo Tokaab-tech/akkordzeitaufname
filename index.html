@@ -59,12 +59,18 @@
 
         <label>
           Auftragsnr.
-          <input id="orderNumber" name="orderNumber" type="text" inputmode="numeric" autocomplete="off" placeholder="z. B. 4711">
+          <div class="scan-input">
+            <input id="orderNumber" name="orderNumber" type="text" autocomplete="off" placeholder="z. B. 4711-A">
+            <button type="button" class="scan-button" data-scan-target="orderNumber" aria-label="Auftragsnr. scannen">Scan</button>
+          </div>
         </label>
 
         <label>
           Identnr.
-          <input id="identNumber" name="identNumber" type="text" autocomplete="off" placeholder="z. B. A-204">
+          <div class="scan-input">
+            <input id="identNumber" name="identNumber" type="text" autocomplete="off" placeholder="z. B. A-204">
+            <button type="button" class="scan-button" data-scan-target="identNumber" aria-label="Identnr. scannen">Scan</button>
+          </div>
         </label>
 
         <div class="field-row">
@@ -130,6 +136,20 @@
     </main>
 
     <section id="printReport" class="print-report" aria-label="Monatsbericht"></section>
+
+    <dialog id="scannerDialog" class="scanner-dialog">
+      <div class="scanner-box">
+        <div class="scanner-heading">
+          <h2 id="scannerTitle">Barcode scannen</h2>
+          <button type="button" id="closeScanner" class="scanner-close" aria-label="Scanner schließen">×</button>
+        </div>
+        <div class="scanner-view">
+          <video id="scannerVideo" autoplay muted playsinline></video>
+          <div class="scanner-frame"></div>
+        </div>
+        <p id="scannerStatus" class="scanner-status">Kamera wird gestartet...</p>
+      </div>
+    </dialog>
 
     <script src="app.js"></script>
   </body>

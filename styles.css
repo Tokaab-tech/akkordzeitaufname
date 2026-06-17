@@ -158,6 +158,37 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
 }
 
+.scan-input {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.scan-input:focus-within {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
+}
+
+.scan-input input {
+  border: 0;
+  box-shadow: none;
+}
+
+.scan-button {
+  align-self: stretch;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0 8px 8px 0;
+  background: #f8fbfa;
+  color: var(--brand-strong);
+  cursor: pointer;
+  font-weight: 800;
+  padding: 0 12px;
+}
+
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -330,6 +361,72 @@ textarea:focus {
   display: none;
 }
 
+.scanner-dialog {
+  width: min(92vw, 430px);
+  border: 0;
+  border-radius: 8px;
+  padding: 0;
+  background: transparent;
+}
+
+.scanner-dialog::backdrop {
+  background: rgba(20, 33, 31, 0.58);
+}
+
+.scanner-box {
+  display: grid;
+  gap: 12px;
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 14px;
+}
+
+.scanner-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.scanner-close {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: #fee4e2;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.scanner-view {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #14211f;
+  aspect-ratio: 4 / 3;
+}
+
+.scanner-view video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scanner-frame {
+  position: absolute;
+  inset: 28% 10%;
+  border: 3px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: 0 0 0 999px rgba(20, 33, 31, 0.28);
+}
+
+.scanner-status {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .entry-list {
   display: grid;
   gap: 10px;
@@ -428,12 +525,20 @@ textarea:focus {
   .calendar-grid {
     gap: 4px;
   }
+
+  .scan-button {
+    padding: 0 9px;
+  }
 }
 
 @media print {
+  @page {
+    margin: 10mm;
+  }
+
   body {
     background: #fff;
-    color: #000;
+    color: #14211f;
   }
 
   .app-shell {
@@ -442,37 +547,57 @@ textarea:focus {
 
   .print-report {
     display: block;
-    padding: 12mm;
+    padding: 0;
     font-family: Arial, Helvetica, sans-serif;
   }
 
-  .print-report h1 {
-    margin: 0 0 10mm;
-    font-size: 18pt;
+  .report-header {
+    margin-bottom: 7mm;
+    border-radius: 4mm;
+    background: #0f766e;
+    color: #fff;
+    padding: 7mm;
+  }
+
+  .report-header h1 {
+    margin: 0;
+    font-size: 20pt;
+    line-height: 1.1;
+  }
+
+  .report-header p {
+    margin: 2mm 0 0;
+    font-size: 11pt;
+    font-weight: 700;
+    text-transform: capitalize;
   }
 
   .report-summary {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 4mm;
+    gap: 3mm;
     margin-bottom: 8mm;
   }
 
   .report-summary div {
-    border: 1px solid #999;
+    border: 1px solid #cfddd8;
+    border-radius: 3mm;
+    background: #f8fbfa;
     padding: 3mm;
   }
 
   .report-summary span {
     display: block;
-    color: #444;
+    color: #64736f;
     font-size: 8pt;
+    font-weight: 700;
   }
 
   .report-summary strong {
     display: block;
     margin-top: 1mm;
-    font-size: 12pt;
+    color: #115e59;
+    font-size: 13pt;
   }
 
   .print-report table {
@@ -483,15 +608,21 @@ textarea:focus {
 
   .print-report th,
   .print-report td {
-    border: 1px solid #999;
+    border: 1px solid #cfddd8;
     padding: 2mm;
     text-align: left;
     vertical-align: top;
   }
 
-  .print-report th,
+  .print-report th {
+    background: #115e59;
+    color: #fff;
+    font-weight: 700;
+  }
+
   .report-day-total {
-    background: #eee;
+    background: #fff4d6;
+    color: #14211f;
     font-weight: 700;
   }
 }

@@ -26,10 +26,20 @@ const calendarTitle = document.querySelector("#calendarTitle");
 const calendarGrid = document.querySelector("#calendarGrid");
 const previousMonthButton = document.querySelector("#previousMonth");
 const nextMonthButton = document.querySelector("#nextMonth");
+const scannerDialog = document.querySelector("#scannerDialog");
+const scannerVideo = document.querySelector("#scannerVideo");
+const scannerTitle = document.querySelector("#scannerTitle");
+const scannerStatus = document.querySelector("#scannerStatus");
+const closeScannerButton = document.querySelector("#closeScanner");
+const scanButtons = document.querySelectorAll("[data-scan-target]");
 
 const storageKey = "akkordzeit.entriesByDate";
 const legacyStorageKey = "akkordzeit.entries";
 const performanceFactor = 1.35;
+let scannerStream = null;
+let scannerAnimationFrame = null;
+let scannerTargetInput = null;
+let barcodeDetector = null;
 
 function toNumber(value) {
   const parsed = Number.parseFloat(String(value).replace(",", "."));
@@ -476,16 +486,23 @@ function renderMonthlyReport() {
 
   printReport.innerHTML = "";
 
+  const header = document.createElement("header");
+  header.className = "report-header";
+
   const title = document.createElement("h1");
-  title.textContent = `Akkordzeit Monatsbericht ${getMonthTitle(monthKey)}`;
+  title.textContent = "Akkordzeit Monatsbericht";
+
+  const subtitle = document.createElement("p");
+  subtitle.textContent = getMonthTitle(monthKey);
+  header.append(title, subtitle);
 
   const summary = document.createElement("div");
   summary.className = "report-summary";
   const summaryItems = [
-    ["Tage mit Einträgen", String(monthEntries.length)],
+    ["Monatsdurchschnitt", `${monthAverage}%`],
     ["Gesamtzeit", formatMinutes(monthTotal.totalTime)],
-    ["Prozent gesamt", `${monthTotal.percentage}%`],
-    ["Ø Tagesprozent", `${monthAverage}%`],
+    ["Tage mit Einträgen", String(monthEntries.length)],
+    ["Einträge", String(allEntries.length)],
   ];
 
   for (const [label, value] of summaryItems) {
@@ -546,12 +563,110 @@ function renderMonthlyReport() {
   }
 
   table.append(body);
-  printReport.append(title, summary, table);
+  printReport.append(header, summary, table);
 }
 
 function exportMonthPdf() {
   renderMonthlyReport();
   window.print();
+}
+
+function stopScanner() {
+  if (scannerAnimationFrame) {
+    cancelAnimationFrame(scannerAnimationFrame);
+    scannerAnimationFrame = null;
+  }
+
+  if (scannerStream) {
+    scannerStream.getTracks().forEach((track) => track.stop());
+    scannerStream = null;
+  }
+
+  scannerVideo.srcObject = null;
+
+  if (scannerDialog.open) {
+    scannerDialog.close();
+  }
+}
+
+function applyScanResult(value) {
+  if (!scannerTargetInput) {
+    return;
+  }
+
+  scannerTargetInput.value = value;
+  scannerTargetInput.dispatchEvent(new Event("input", { bubbles: true }));
+  stopScanner();
+}
+
+async function detectBarcodeLoop() {
+  if (!barcodeDetector || !scannerStream) {
+    return;
+  }
+
+  try {
+    const barcodes = await barcodeDetector.detect(scannerVideo);
+    if (barcodes.length > 0) {
+      applyScanResult(barcodes[0].rawValue);
+      return;
+    }
+  } catch {
+    scannerStatus.textContent = "Barcode konnte nicht gelesen werden. Bitte erneut ausrichten.";
+  }
+
+  scannerAnimationFrame = requestAnimationFrame(detectBarcodeLoop);
+}
+
+async function startScanner(targetName) {
+  scannerTargetInput = inputs[targetName];
+  scannerTitle.textContent = targetName === "orderNumber"
+    ? "Auftragsnr. scannen"
+    : "Identnr. scannen";
+  scannerStatus.textContent = "Kamera wird gestartet...";
+
+  if (!("BarcodeDetector" in window)) {
+    alert("Barcode-Scanner wird von diesem Browser nicht unterstützt. Auf Android Chrome oder in einer APK sollte es eher funktionieren.");
+    return;
+  }
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    alert("Die Kamera ist in dieser Umgebung nicht verfügbar. Eventuell blockiert file:// den Kamerazugriff.");
+    return;
+  }
+
+  try {
+    barcodeDetector = new BarcodeDetector({
+      formats: [
+        "code_128",
+        "code_39",
+        "code_93",
+        "ean_13",
+        "ean_8",
+        "itf",
+        "qr_code",
+        "upc_a",
+        "upc_e",
+      ],
+    });
+
+    scannerStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+      audio: false,
+    });
+
+    scannerVideo.srcObject = scannerStream;
+    scannerDialog.showModal();
+    await scannerVideo.play();
+    scannerStatus.textContent = "Barcode in den Rahmen halten.";
+    detectBarcodeLoop();
+  } catch {
+    stopScanner();
+    alert("Kamera konnte nicht gestartet werden. Bitte Kameraberechtigung prüfen.");
+  }
 }
 
 form.addEventListener("input", updateResults);
@@ -584,6 +699,14 @@ backupFileInput.addEventListener("change", () => {
   }
 });
 exportMonthPdfButton.addEventListener("click", exportMonthPdf);
+scanButtons.forEach((button) => {
+  button.addEventListener("click", () => startScanner(button.dataset.scanTarget));
+});
+closeScannerButton.addEventListener("click", stopScanner);
+scannerDialog.addEventListener("cancel", (event) => {
+  event.preventDefault();
+  stopScanner();
+});
 
 setToday();
 updateResults();

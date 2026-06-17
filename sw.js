@@ -1,4 +1,4 @@
-const cacheName = "akkordzeit-v8";
+const cacheName = "akkordzeit-v10";
 const appFiles = [
   "./",
   "./index.html",

@@ -11,7 +11,11 @@ Die Arbeitszeit ist standardmäßig auf 420 Minuten gesetzt und kann im Formular
 
 ## Backup und PDF
 
-Über den Bereich `Daten` können alle Einträge als JSON-Backup exportiert und später wieder importiert werden. Der Monatsbericht wird als druckfertige Ansicht geöffnet und kann im Druckdialog als PDF gespeichert werden.
+Über den Bereich `Daten` können alle Einträge als JSON-Backup exportiert und später wieder importiert werden. Der Monatsbericht wird als druckfertige Ansicht geöffnet und kann im Druckdialog als PDF gespeichert werden. Im Bericht wird der Monatsdurchschnitt der Tagesprozente angezeigt.
+
+## Barcode-Scan
+
+Neben Auftragsnr. und Identnr. gibt es jeweils einen Scan-Button. Wenn Kamera und Barcode-Erkennung auf dem Gerät verfügbar sind, wird der gescannte Wert automatisch in das passende Feld übernommen.
 
 ## Start
 
