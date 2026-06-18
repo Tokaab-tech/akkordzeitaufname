@@ -427,6 +427,29 @@ textarea:focus {
   font-size: 0.9rem;
 }
 
+.scanner-result {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.scanner-result.is-hidden {
+  display: none;
+}
+
+.scanner-result input {
+  color: var(--brand-strong);
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+.scanner-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
 .entry-list {
   display: grid;
   gap: 10px;
@@ -450,7 +473,6 @@ textarea:focus {
   justify-content: space-between;
   align-items: flex-start;
   gap: 10px;
-  padding-right: 72px;
   font-weight: 800;
 }
 
@@ -486,18 +508,58 @@ textarea:focus {
   font-size: 0.9rem;
 }
 
+.entry-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
+.edit-entry,
 .delete-entry {
-  position: absolute;
-  top: 8px;
-  right: 8px;
   border: 0;
   border-radius: 8px;
-  background: #fee4e2;
-  color: var(--danger);
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 800;
   padding: 7px 8px;
+}
+
+.edit-entry {
+  background: #dff5ef;
+  color: var(--brand-strong);
+}
+
+.delete-entry {
+  background: #fee4e2;
+  color: var(--danger);
+}
+
+.editor-dialog {
+  width: min(92vw, 430px);
+  border: 0;
+  border-radius: 8px;
+  padding: 0;
+  background: transparent;
+}
+
+.editor-dialog::backdrop {
+  background: rgba(20, 33, 31, 0.58);
+}
+
+.editor-box {
+  display: grid;
+  gap: 14px;
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 14px;
+}
+
+.editor-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .empty-state {

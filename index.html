@@ -148,6 +148,33 @@
           <div class="scanner-frame"></div>
         </div>
         <p id="scannerStatus" class="scanner-status">Kamera wird gestartet...</p>
+        <div id="scannerResult" class="scanner-result is-hidden">
+          <label>
+            Erkanntes Ergebnis
+            <input id="scannerResultValue" type="text" readonly>
+          </label>
+          <div class="scanner-actions">
+            <button type="button" id="rescanBarcode" class="secondary-action">Erneut scannen</button>
+            <button type="button" id="confirmBarcode" class="primary-action">Übernehmen</button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="noteEditorDialog" class="editor-dialog">
+      <div class="editor-box">
+        <div class="scanner-heading">
+          <h2>Anmerkung bearbeiten</h2>
+          <button type="button" id="closeNoteEditor" class="scanner-close" aria-label="Bearbeiten schließen">×</button>
+        </div>
+        <label>
+          Anmerkung
+          <textarea id="noteEditorValue" rows="5" placeholder="Anmerkung eingeben"></textarea>
+        </label>
+        <div class="editor-actions">
+          <button type="button" id="cancelNoteEdit" class="secondary-action">Abbrechen</button>
+          <button type="button" id="saveNoteEdit" class="primary-action">Speichern</button>
+        </div>
       </div>
     </dialog>
 

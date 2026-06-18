@@ -32,6 +32,15 @@ const scannerTitle = document.querySelector("#scannerTitle");
 const scannerStatus = document.querySelector("#scannerStatus");
 const closeScannerButton = document.querySelector("#closeScanner");
 const scanButtons = document.querySelectorAll("[data-scan-target]");
+const scannerResult = document.querySelector("#scannerResult");
+const scannerResultValue = document.querySelector("#scannerResultValue");
+const rescanBarcodeButton = document.querySelector("#rescanBarcode");
+const confirmBarcodeButton = document.querySelector("#confirmBarcode");
+const noteEditorDialog = document.querySelector("#noteEditorDialog");
+const noteEditorValue = document.querySelector("#noteEditorValue");
+const closeNoteEditorButton = document.querySelector("#closeNoteEditor");
+const cancelNoteEditButton = document.querySelector("#cancelNoteEdit");
+const saveNoteEditButton = document.querySelector("#saveNoteEdit");
 
 const storageKey = "akkordzeit.entriesByDate";
 const legacyStorageKey = "akkordzeit.entries";
@@ -40,6 +49,9 @@ let scannerStream = null;
 let scannerAnimationFrame = null;
 let scannerTargetInput = null;
 let barcodeDetector = null;
+let pendingScanResult = "";
+let editingEntryDate = null;
+let editingEntryId = null;
 
 function toNumber(value) {
   const parsed = Number.parseFloat(String(value).replace(",", "."));
@@ -273,6 +285,18 @@ function renderEntries() {
       deleteEntry(selectedDate, entry.id);
     });
 
+    const editButton = document.createElement("button");
+    editButton.className = "edit-entry";
+    editButton.type = "button";
+    editButton.textContent = "Bearbeiten";
+    editButton.addEventListener("click", () => {
+      openNoteEditor(selectedDate, entry);
+    });
+
+    const entryActions = document.createElement("div");
+    entryActions.className = "entry-actions";
+    entryActions.append(editButton, deleteButton);
+
     const meta = document.createElement("p");
     meta.className = "entry-meta";
     meta.textContent = `${entry.quantity} Stk. · ${entry.timePerPart} min/Teil · Rüstzeit ${entry.setupTime || 0} min · Faktor ${performanceFactor}`;
@@ -291,9 +315,47 @@ function renderEntries() {
 
     entryHead.append(identNumber, orderNumber);
     title.append(entryHead, percent);
-    item.append(deleteButton);
+    item.append(entryActions);
     entryList.append(item);
   }
+}
+
+function openNoteEditor(date, entry) {
+  editingEntryDate = date;
+  editingEntryId = entry.id;
+  noteEditorValue.value = entry.notes || "";
+  noteEditorDialog.showModal();
+  noteEditorValue.focus();
+}
+
+function closeNoteEditor() {
+  editingEntryDate = null;
+  editingEntryId = null;
+  noteEditorValue.value = "";
+
+  if (noteEditorDialog.open) {
+    noteEditorDialog.close();
+  }
+}
+
+function saveEditedNote() {
+  if (!editingEntryDate || !editingEntryId) {
+    return;
+  }
+
+  const entriesByDate = loadEntriesByDate();
+  const entry = (entriesByDate[editingEntryDate] || [])
+    .find((savedEntry) => savedEntry.id === editingEntryId);
+
+  if (!entry) {
+    closeNoteEditor();
+    return;
+  }
+
+  entry.notes = noteEditorValue.value.trim();
+  saveEntriesByDate(entriesByDate);
+  closeNoteEditor();
+  renderEntries();
 }
 
 function deleteEntry(date, entryId) {
@@ -583,6 +645,9 @@ function stopScanner() {
   }
 
   scannerVideo.srcObject = null;
+  pendingScanResult = "";
+  scannerResultValue.value = "";
+  scannerResult.classList.add("is-hidden");
 
   if (scannerDialog.open) {
     scannerDialog.close();
@@ -599,6 +664,28 @@ function applyScanResult(value) {
   stopScanner();
 }
 
+function showScanResult(value) {
+  pendingScanResult = value;
+  scannerResultValue.value = value;
+  scannerResult.classList.remove("is-hidden");
+  scannerStatus.textContent = "Ergebnis prüfen und bestätigen.";
+  scannerVideo.pause();
+
+  if (scannerAnimationFrame) {
+    cancelAnimationFrame(scannerAnimationFrame);
+    scannerAnimationFrame = null;
+  }
+}
+
+async function rescanBarcode() {
+  pendingScanResult = "";
+  scannerResultValue.value = "";
+  scannerResult.classList.add("is-hidden");
+  scannerStatus.textContent = "Barcode in den Rahmen halten.";
+  await scannerVideo.play();
+  detectBarcodeLoop();
+}
+
 async function detectBarcodeLoop() {
   if (!barcodeDetector || !scannerStream) {
     return;
@@ -607,8 +694,11 @@ async function detectBarcodeLoop() {
   try {
     const barcodes = await barcodeDetector.detect(scannerVideo);
     if (barcodes.length > 0) {
-      applyScanResult(barcodes[0].rawValue);
-      return;
+      const detectedValue = barcodes[0].rawValue.trim();
+      if (detectedValue) {
+        showScanResult(detectedValue);
+        return;
+      }
     }
   } catch {
     scannerStatus.textContent = "Barcode konnte nicht gelesen werden. Bitte erneut ausrichten.";
@@ -623,6 +713,9 @@ async function startScanner(targetName) {
     ? "Auftragsnr. scannen"
     : "Identnr. scannen";
   scannerStatus.textContent = "Kamera wird gestartet...";
+  pendingScanResult = "";
+  scannerResultValue.value = "";
+  scannerResult.classList.add("is-hidden");
 
   if (!("BarcodeDetector" in window)) {
     alert("Barcode-Scanner wird von diesem Browser nicht unterstützt. Auf Android Chrome oder in einer APK sollte es eher funktionieren.");
@@ -703,9 +796,22 @@ scanButtons.forEach((button) => {
   button.addEventListener("click", () => startScanner(button.dataset.scanTarget));
 });
 closeScannerButton.addEventListener("click", stopScanner);
+rescanBarcodeButton.addEventListener("click", rescanBarcode);
+confirmBarcodeButton.addEventListener("click", () => {
+  if (pendingScanResult) {
+    applyScanResult(pendingScanResult);
+  }
+});
 scannerDialog.addEventListener("cancel", (event) => {
   event.preventDefault();
   stopScanner();
+});
+closeNoteEditorButton.addEventListener("click", closeNoteEditor);
+cancelNoteEditButton.addEventListener("click", closeNoteEditor);
+saveNoteEditButton.addEventListener("click", saveEditedNote);
+noteEditorDialog.addEventListener("cancel", (event) => {
+  event.preventDefault();
+  closeNoteEditor();
 });
 
 setToday();

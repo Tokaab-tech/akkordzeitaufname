@@ -15,7 +15,9 @@ Die Arbeitszeit ist standardmäßig auf 420 Minuten gesetzt und kann im Formular
 
 ## Barcode-Scan
 
-Neben Auftragsnr. und Identnr. gibt es jeweils einen Scan-Button. Wenn Kamera und Barcode-Erkennung auf dem Gerät verfügbar sind, wird der gescannte Wert automatisch in das passende Feld übernommen.
+Neben Auftragsnr. und Identnr. gibt es jeweils einen Scan-Button. Wenn Kamera und Barcode-Erkennung auf dem Gerät verfügbar sind, wird der erkannte Wert zuerst zur Kontrolle angezeigt und erst nach Bestätigung in das passende Feld übernommen.
+
+Anmerkungen gespeicherter Einträge können über den Button `Bearbeiten` nachträglich korrigiert werden.
 
 ## Start
 
