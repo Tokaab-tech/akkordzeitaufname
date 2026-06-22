@@ -22,6 +22,7 @@ Neben Auftragsnr. und Identnr. gibt es jeweils einen Scan-Button. Wenn Kamera un
 Anmerkungen gespeicherter Einträge können über den Button `Bearbeiten` nachträglich korrigiert werden.
 
 Als Startbildschirm-Symbol verwendet die App `icon-192.png` und `icon-512.png`. Für iOS wird zusätzlich `apple-touch-icon.png` verwendet.
+Der äußere Symbolhintergrund ist vollständig im App-Grün ausgefüllt, damit auf dem Startbildschirm keine weißen Ränder erscheinen.
 
 Über den Button `Monatsübersicht` öffnet sich eine zweite Seite mit gestapelten Säulen für alle Arbeitstage. Stückzeit, Rüstzeit und D-Stunden werden farblich getrennt dargestellt; Monat und Jahr sind auswählbar.
 
