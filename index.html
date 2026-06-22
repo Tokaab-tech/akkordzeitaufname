@@ -6,6 +6,8 @@
     <meta name="theme-color" content="#0f766e">
     <title>Akkordzeit</title>
     <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -107,6 +109,14 @@
         </div>
 
         <label>
+          D-Stunden (Ausfallzeit Produktion)
+          <div class="unit-input">
+            <input id="downtime" name="downtime" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0">
+            <span>min</span>
+          </div>
+        </label>
+
+        <label>
           Anmerkungen
           <textarea id="notes" name="notes" rows="3" placeholder="z. B. Störung, Nacharbeit, Material fehlt"></textarea>
         </label>
@@ -133,6 +143,8 @@
         </div>
         <input id="backupFile" class="file-import" type="file" accept="application/json,.json">
       </section>
+
+      <a id="monthlyOverviewLink" class="monthly-overview-link" href="monthly.html">Monatsübersicht</a>
     </main>
 
     <section id="printReport" class="print-report" aria-label="Monatsbericht"></section>

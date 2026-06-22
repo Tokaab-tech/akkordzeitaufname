@@ -1,10 +1,14 @@
-const cacheName = "akkordzeit-v12";
+const cacheName = "akkordzeit-v16";
 const appFiles = [
   "./",
   "./index.html",
+  "./monthly.html",
   "./styles.css",
   "./app.js",
-  "./icon.svg",
+  "./monthly.js",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./apple-touch-icon.png",
   "./manifest.webmanifest",
 ];
 

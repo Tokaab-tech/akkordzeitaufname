@@ -356,6 +356,231 @@ textarea:focus {
   font-weight: 800;
 }
 
+.monthly-overview-link {
+  display: grid;
+  place-items: center;
+  min-height: 50px;
+  margin-top: 14px;
+  border-radius: 8px;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.monthly-page {
+  width: min(100%, 920px);
+}
+
+.monthly-topbar {
+  align-items: flex-start;
+}
+
+.back-link {
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--brand-strong);
+  font-weight: 800;
+  padding: 0 12px;
+  text-decoration: none;
+}
+
+.month-controls,
+.chart-section {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.month-controls {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+  padding: 14px;
+}
+
+.month-controls select {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  padding: 10px 12px;
+}
+
+.month-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  overflow: hidden;
+  margin: 14px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--line);
+  box-shadow: var(--shadow);
+}
+
+.month-summary div {
+  display: grid;
+  gap: 5px;
+  background: #f8fbfa;
+  padding: 14px;
+}
+
+.month-summary span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.month-summary strong {
+  color: var(--brand-strong);
+  font-size: 1.2rem;
+}
+
+.chart-section {
+  padding: 14px;
+}
+
+.chart-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.legend-production {
+  background: var(--brand);
+}
+
+.legend-setup {
+  background: var(--accent);
+}
+
+.legend-downtime {
+  background: #9f4b3f;
+}
+
+.chart-scroll {
+  overflow-x: auto;
+  padding: 24px 4px 4px;
+}
+
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  min-width: max-content;
+  height: 310px;
+  border-bottom: 1px solid var(--line);
+  background: repeating-linear-gradient(
+    to top,
+    transparent 0,
+    transparent 59px,
+    rgba(207, 221, 216, 0.65) 60px
+  );
+  padding: 0 10px;
+}
+
+.chart-column {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  width: 48px;
+  height: 100%;
+}
+
+.bar-area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 0;
+}
+
+.bar-value {
+  position: absolute;
+  bottom: calc(var(--bar-height) + 5px);
+  left: 50%;
+  color: var(--brand-strong);
+  font-size: 0.72rem;
+  font-weight: 800;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.stacked-bar {
+  display: flex;
+  flex-direction: column;
+  width: 32px;
+  height: var(--bar-height);
+  min-height: 2px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 5px 5px 0 0;
+  background: #e4eeeb;
+}
+
+.bar-production {
+  flex: 0 0 auto;
+  background: var(--brand);
+}
+
+.bar-setup,
+.bar-downtime {
+  flex: 0 0 auto;
+}
+
+.bar-setup {
+  background: var(--accent);
+}
+
+.bar-downtime {
+  background: #9f4b3f;
+}
+
+.bar-date {
+  min-height: 34px;
+  padding-top: 7px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.chart-empty {
+  padding: 54px 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
 .file-import,
 .print-report {
   display: none;
@@ -508,6 +733,17 @@ textarea:focus {
   font-size: 0.9rem;
 }
 
+.entry-downtime-title {
+  color: #9f4b3f;
+  font-size: 1.08rem;
+}
+
+.entry-downtime-value {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
 .entry-actions {
   display: flex;
   justify-content: flex-end;
@@ -590,6 +826,17 @@ textarea:focus {
 
   .scan-button {
     padding: 0 9px;
+  }
+}
+
+@media (max-width: 600px) {
+  .month-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 

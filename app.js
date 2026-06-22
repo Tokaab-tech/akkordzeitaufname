@@ -6,6 +6,7 @@ const inputs = {
   quantity: document.querySelector("#quantity"),
   timePerPart: document.querySelector("#timePerPart"),
   setupTime: document.querySelector("#setupTime"),
+  downtime: document.querySelector("#downtime"),
   availableTime: document.querySelector("#availableTime"),
   notes: document.querySelector("#notes"),
 };
@@ -20,6 +21,7 @@ const importBackupButton = document.querySelector("#importBackup");
 const backupFileInput = document.querySelector("#backupFile");
 const exportMonthPdfButton = document.querySelector("#exportMonthPdf");
 const printReport = document.querySelector("#printReport");
+const monthlyOverviewLink = document.querySelector("#monthlyOverviewLink");
 const calendarToggle = document.querySelector("#calendarToggle");
 const calendarPanel = document.querySelector("#calendarPanel");
 const calendarTitle = document.querySelector("#calendarTitle");
@@ -84,8 +86,9 @@ function calculateEntry() {
   const quantity = toNumber(inputs.quantity.value);
   const timePerPart = toNumber(inputs.timePerPart.value);
   const setupTime = toNumber(inputs.setupTime.value);
+  const downtime = toNumber(inputs.downtime.value);
   const availableTime = toNumber(inputs.availableTime.value);
-  const totalTime = quantity * timePerPart + setupTime;
+  const totalTime = quantity * timePerPart + setupTime + downtime;
   const percentage = availableTime > 0 ? (totalTime / availableTime) * 100 * performanceFactor : 0;
 
   return {
@@ -97,7 +100,8 @@ function calculateEntry() {
 function hasDraftEntry() {
   return toNumber(inputs.quantity.value) > 0
     || toNumber(inputs.timePerPart.value) > 0
-    || toNumber(inputs.setupTime.value) > 0;
+    || toNumber(inputs.setupTime.value) > 0
+    || toNumber(inputs.downtime.value) > 0;
 }
 
 function sumEntries(entries) {
@@ -173,6 +177,7 @@ function updateResults() {
   totalTimeOutput.textContent = formatMinutes(dayTotal.totalTime);
   percentageOutput.textContent = `${dayTotal.percentage}%`;
   statusBadge.textContent = `Ø ${getMonthlyAveragePercentage(selectedDate, draftTotal)}%`;
+  monthlyOverviewLink.href = `monthly.html?date=${encodeURIComponent(selectedDate)}`;
 }
 
 function normalizeEntriesByDate(rawEntries) {
@@ -297,9 +302,39 @@ function renderEntries() {
     entryActions.className = "entry-actions";
     entryActions.append(editButton, deleteButton);
 
+    const isDowntimeOnly = toNumber(entry.downtime) > 0
+      && toNumber(entry.quantity) === 0
+      && toNumber(entry.timePerPart) === 0
+      && toNumber(entry.setupTime) === 0
+      && !String(entry.identNumber || "").trim()
+      && !String(entry.orderNumber || "").trim();
+
+    if (isDowntimeOnly) {
+      const downtimeTitle = document.createElement("strong");
+      downtimeTitle.className = "entry-downtime-title";
+      downtimeTitle.textContent = "D-Stunden";
+
+      const downtimeValue = document.createElement("p");
+      downtimeValue.className = "entry-downtime-value";
+      downtimeValue.textContent = formatMinutes(entry.downtime);
+
+      item.append(downtimeTitle, downtimeValue);
+
+      if (entry.notes) {
+        const notes = document.createElement("p");
+        notes.className = "entry-note";
+        notes.textContent = entry.notes;
+        item.append(notes);
+      }
+
+      item.append(entryActions);
+      entryList.append(item);
+      continue;
+    }
+
     const meta = document.createElement("p");
     meta.className = "entry-meta";
-    meta.textContent = `${entry.quantity} Stk. · ${entry.timePerPart} min/Teil · Rüstzeit ${entry.setupTime || 0} min · Faktor ${performanceFactor}`;
+    meta.textContent = `${entry.quantity} Stk. · ${entry.timePerPart} min/Teil · Rüstzeit ${entry.setupTime || 0} min · D-Stunden ${entry.downtime || 0} min · Faktor ${performanceFactor}`;
 
     const total = document.createElement("p");
     total.textContent = `${formatMinutes(entry.totalTime)} Gesamtzeit`;
@@ -387,6 +422,7 @@ function saveCurrentEntry() {
     quantity: toNumber(inputs.quantity.value),
     timePerPart: toNumber(inputs.timePerPart.value),
     setupTime: toNumber(inputs.setupTime.value),
+    downtime: toNumber(inputs.downtime.value),
     availableTime: toNumber(inputs.availableTime.value),
     notes: inputs.notes.value.trim(),
     totalTime: result.totalTime,
@@ -410,11 +446,15 @@ function clearDraftFields() {
   inputs.quantity.value = "";
   inputs.timePerPart.value = "";
   inputs.setupTime.value = "";
+  inputs.downtime.value = "";
   inputs.notes.value = "";
 }
 
 function setToday() {
-  inputs.date.value = new Date().toISOString().slice(0, 10);
+  const requestedDate = new URLSearchParams(window.location.search).get("date");
+  inputs.date.value = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate || "")
+    ? requestedDate
+    : new Date().toISOString().slice(0, 10);
 }
 
 function renderCalendar() {
@@ -580,7 +620,7 @@ function renderMonthlyReport() {
   const table = document.createElement("table");
   const head = document.createElement("thead");
   const headRow = document.createElement("tr");
-  ["Datum", "Identnr.", "Auftragsnr.", "Stk.", "min/Teil", "Rüstzeit", "Gesamtzeit", "%", "Anmerkung"]
+  ["Datum", "Identnr.", "Auftragsnr.", "Stk.", "min/Teil", "Rüstzeit", "D-Stunden", "Gesamtzeit", "%", "Anmerkung"]
     .forEach((heading) => appendReportCell(headRow, heading, "th"));
   head.append(headRow);
   table.append(head);
@@ -596,6 +636,7 @@ function renderMonthlyReport() {
       appendReportCell(row, entry.quantity ?? "0");
       appendReportCell(row, entry.timePerPart ?? "0");
       appendReportCell(row, entry.setupTime ?? "0");
+      appendReportCell(row, entry.downtime ?? "0");
       appendReportCell(row, formatMinutes(entry.totalTime || 0));
       appendReportCell(row, `${entry.percentage || 0}%`);
       appendReportCell(row, entry.notes || "");
@@ -611,6 +652,7 @@ function renderMonthlyReport() {
     appendReportCell(totalRow, "");
     appendReportCell(totalRow, "");
     appendReportCell(totalRow, "");
+    appendReportCell(totalRow, "");
     appendReportCell(totalRow, formatMinutes(dayTotal.totalTime));
     appendReportCell(totalRow, `${dayTotal.percentage}%`);
     appendReportCell(totalRow, "");
@@ -620,7 +662,7 @@ function renderMonthlyReport() {
   if (monthEntries.length === 0) {
     const row = document.createElement("tr");
     const cell = appendReportCell(row, "Für diesen Monat sind keine Einträge gespeichert.");
-    cell.colSpan = 9;
+    cell.colSpan = 10;
     body.append(row);
   }
 

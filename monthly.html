@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0f766e">
+    <title>Monatsübersicht – Akkordzeit</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell monthly-page">
+      <header class="topbar monthly-topbar">
+        <div>
+          <p class="eyebrow">Auswertung</p>
+          <h1>Monatsübersicht</h1>
+        </div>
+        <a id="backToApp" class="back-link" href="index.html">Zurück</a>
+      </header>
+
+      <section class="month-controls" aria-label="Zeitraum auswählen">
+        <label>
+          Monat
+          <select id="monthSelect"></select>
+        </label>
+        <label>
+          Jahr
+          <select id="yearSelect"></select>
+        </label>
+      </section>
+
+      <section class="month-summary" aria-label="Monatswerte">
+        <div>
+          <span>Monatsdurchschnitt</span>
+          <strong id="monthAverage">0%</strong>
+        </div>
+        <div>
+          <span>Tage mit Einträgen</span>
+          <strong id="activeDays">0</strong>
+        </div>
+        <div>
+          <span>Rüstzeit gesamt</span>
+          <strong id="setupTimeTotal">0 min</strong>
+        </div>
+        <div>
+          <span>D-Stunden gesamt</span>
+          <strong id="downtimeTotal">0 min</strong>
+        </div>
+      </section>
+
+      <section class="chart-section" aria-label="Säulendiagramm">
+        <div class="chart-heading">
+          <h2 id="chartTitle">Tagesleistung</h2>
+          <div class="chart-legend" aria-label="Legende">
+            <span class="legend-item"><span class="legend-swatch legend-production"></span>Stückzeit</span>
+            <span class="legend-item"><span class="legend-swatch legend-setup"></span>Rüstzeit</span>
+            <span class="legend-item"><span class="legend-swatch legend-downtime"></span>D-Stunden</span>
+          </div>
+        </div>
+        <div id="chartContent"></div>
+      </section>
+    </main>
+
+    <script src="monthly.js"></script>
+  </body>
+</html>
