@@ -416,7 +416,7 @@ textarea:focus {
 
 .month-summary {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1px;
   overflow: hidden;
   margin: 14px 0;
@@ -442,6 +442,36 @@ textarea:focus {
 .month-summary strong {
   color: var(--brand-strong);
   font-size: 1.2rem;
+}
+
+.summary-average {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.summary-average-without-downtime {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.summary-active-days {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.summary-downtime {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.summary-production-time {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.summary-setup-time {
+  grid-column: 3;
+  grid-row: 2;
 }
 
 .chart-section {
@@ -832,6 +862,16 @@ textarea:focus {
 @media (max-width: 600px) {
   .month-summary {
     grid-template-columns: 1fr;
+  }
+
+  .summary-average,
+  .summary-average-without-downtime,
+  .summary-active-days,
+  .summary-downtime,
+  .summary-production-time,
+  .summary-setup-time {
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .chart-heading {

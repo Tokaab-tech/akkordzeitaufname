@@ -51,6 +51,9 @@ let scannerStream = null;
 let scannerAnimationFrame = null;
 let scannerTargetInput = null;
 let barcodeDetector = null;
+let scannerEngine = null;
+let zxingReader = null;
+let zxingControls = null;
 let pendingScanResult = "";
 let editingEntryDate = null;
 let editingEntryId = null;
@@ -681,12 +684,18 @@ function stopScanner() {
     scannerAnimationFrame = null;
   }
 
+  if (zxingControls) {
+    zxingControls.stop();
+    zxingControls = null;
+  }
+
   if (scannerStream) {
     scannerStream.getTracks().forEach((track) => track.stop());
     scannerStream = null;
   }
 
   scannerVideo.srcObject = null;
+  scannerEngine = null;
   pendingScanResult = "";
   scannerResultValue.value = "";
   scannerResult.classList.add("is-hidden");
@@ -724,6 +733,12 @@ async function rescanBarcode() {
   scannerResultValue.value = "";
   scannerResult.classList.add("is-hidden");
   scannerStatus.textContent = "Barcode in den Rahmen halten.";
+
+  if (scannerEngine === "zxing") {
+    startZxingScanner();
+    return;
+  }
+
   await scannerVideo.play();
   detectBarcodeLoop();
 }
@@ -747,6 +762,57 @@ async function detectBarcodeLoop() {
   }
 
   scannerAnimationFrame = requestAnimationFrame(detectBarcodeLoop);
+}
+
+function canUseZxingScanner() {
+  return Boolean(window.ZXingBrowser?.BrowserMultiFormatReader);
+}
+
+async function startZxingScanner() {
+  if (!canUseZxingScanner()) {
+    alert("Der iOS-Scanner konnte nicht geladen werden. Bitte pruefen, ob vendor/zxing-browser.min.js vorhanden ist.");
+    return;
+  }
+
+  if (zxingControls) {
+    zxingControls.stop();
+    zxingControls = null;
+  }
+
+  scannerEngine = "zxing";
+  scannerStatus.textContent = "Barcode in den Rahmen halten.";
+  if (!zxingReader) {
+    zxingReader = new ZXingBrowser.BrowserMultiFormatReader();
+  }
+
+  try {
+    zxingControls = await zxingReader.decodeFromConstraints(
+      {
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      },
+      scannerVideo,
+      (result, error, controls) => {
+        if (result) {
+          controls.stop();
+          zxingControls = null;
+          showScanResult(result.getText().trim());
+          return;
+        }
+
+        if (error?.name && !["NotFoundException", "ChecksumException", "FormatException"].includes(error.name)) {
+          scannerStatus.textContent = "Barcode konnte nicht gelesen werden. Bitte erneut ausrichten.";
+        }
+      },
+    );
+  } catch {
+    stopScanner();
+    alert("Kamera konnte nicht gestartet werden. Auf iOS muss die App ueber HTTPS oder als installierte PWA geoeffnet werden.");
+  }
 }
 
 async function startScanner(targetName) {
@@ -804,6 +870,63 @@ async function startScanner(targetName) {
   }
 }
 
+async function startScannerWithFallback(targetName) {
+  scannerTargetInput = inputs[targetName];
+  scannerTitle.textContent = targetName === "orderNumber"
+    ? "Auftragsnr. scannen"
+    : "Identnr. scannen";
+  scannerStatus.textContent = "Kamera wird gestartet...";
+  pendingScanResult = "";
+  scannerResultValue.value = "";
+  scannerResult.classList.add("is-hidden");
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    alert("Die Kamera ist in dieser Umgebung nicht verfuegbar. Auf iOS bitte ueber HTTPS oder als installierte PWA oeffnen.");
+    return;
+  }
+
+  scannerDialog.showModal();
+
+  if (!("BarcodeDetector" in window)) {
+    startZxingScanner();
+    return;
+  }
+
+  try {
+    scannerEngine = "native";
+    barcodeDetector = new BarcodeDetector({
+      formats: [
+        "code_128",
+        "code_39",
+        "code_93",
+        "ean_13",
+        "ean_8",
+        "itf",
+        "qr_code",
+        "upc_a",
+        "upc_e",
+      ],
+    });
+
+    scannerStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+      audio: false,
+    });
+
+    scannerVideo.srcObject = scannerStream;
+    await scannerVideo.play();
+    scannerStatus.textContent = "Barcode in den Rahmen halten.";
+    detectBarcodeLoop();
+  } catch {
+    stopScanner();
+    alert("Kamera konnte nicht gestartet werden. Bitte Kameraberechtigung pruefen.");
+  }
+}
+
 form.addEventListener("input", updateResults);
 inputs.date.addEventListener("change", () => {
   renderEntries();
@@ -835,7 +958,7 @@ backupFileInput.addEventListener("change", () => {
 });
 exportMonthPdfButton.addEventListener("click", exportMonthPdf);
 scanButtons.forEach((button) => {
-  button.addEventListener("click", () => startScanner(button.dataset.scanTarget));
+  button.addEventListener("click", () => startScannerWithFallback(button.dataset.scanTarget));
 });
 closeScannerButton.addEventListener("click", stopScanner);
 rescanBarcodeButton.addEventListener("click", rescanBarcode);

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0f766e">
-    <title>Monatsübersicht – Akkordzeit</title>
+    <title>Monatsauswertung – Akkordzeit</title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -15,7 +15,7 @@
       <header class="topbar monthly-topbar">
         <div>
           <p class="eyebrow">Auswertung</p>
-          <h1>Monatsübersicht</h1>
+          <h1>Monatsauswertung</h1>
         </div>
         <a id="backToApp" class="back-link" href="index.html">Zurück</a>
       </header>
@@ -32,19 +32,27 @@
       </section>
 
       <section class="month-summary" aria-label="Monatswerte">
-        <div>
+        <div class="summary-average">
           <span>Monatsdurchschnitt</span>
           <strong id="monthAverage">0%</strong>
         </div>
-        <div>
+        <div class="summary-average-without-downtime">
+          <span>Monatsdurchschnitt ohne D-Stunden</span>
+          <strong id="monthAverageWithoutDowntime">0%</strong>
+        </div>
+        <div class="summary-active-days">
           <span>Tage mit Einträgen</span>
           <strong id="activeDays">0</strong>
         </div>
-        <div>
+        <div class="summary-production-time">
+          <span>Stückzeit gesamt</span>
+          <strong id="productionTimeTotal">0 min</strong>
+        </div>
+        <div class="summary-setup-time">
           <span>Rüstzeit gesamt</span>
           <strong id="setupTimeTotal">0 min</strong>
         </div>
-        <div>
+        <div class="summary-downtime">
           <span>D-Stunden gesamt</span>
           <strong id="downtimeTotal">0 min</strong>
         </div>

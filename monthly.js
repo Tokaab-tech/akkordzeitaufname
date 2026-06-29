@@ -5,7 +5,9 @@ const defaultAvailableTime = 420;
 const monthSelect = document.querySelector("#monthSelect");
 const yearSelect = document.querySelector("#yearSelect");
 const monthAverageOutput = document.querySelector("#monthAverage");
+const monthAverageWithoutDowntimeOutput = document.querySelector("#monthAverageWithoutDowntime");
 const activeDaysOutput = document.querySelector("#activeDays");
+const productionTimeTotalOutput = document.querySelector("#productionTimeTotal");
 const setupTimeTotalOutput = document.querySelector("#setupTimeTotal");
 const downtimeTotalOutput = document.querySelector("#downtimeTotal");
 const chartTitle = document.querySelector("#chartTitle");
@@ -96,6 +98,9 @@ function calculateDay(date, entries) {
     (sum, entry) => sum + toNumber(entry.percentage),
     0,
   );
+  const productionTime = entries.reduce((sum, entry) => (
+    sum + toNumber(entry.quantity) * toNumber(entry.timePerPart)
+  ), 0);
   const setupPercentage = entries.reduce((sum, entry) => {
     const availableTime = toNumber(entry.availableTime) || defaultAvailableTime;
     const setupTime = toNumber(entry.setupTime);
@@ -117,6 +122,8 @@ function calculateDay(date, entries) {
     date,
     day: Number(date.slice(8, 10)),
     percentage: round(totalPercentage),
+    percentageWithoutDowntime: round(Math.max(totalPercentage - downtimePercentage, 0)),
+    productionTime: round(productionTime),
     setupPercentage: round(setupPercentage * nonProductionScale),
     downtimePercentage: round(downtimePercentage * nonProductionScale),
     setupTime: round(setupTime),
@@ -176,17 +183,26 @@ function createBar(day, scale) {
 function renderOverview() {
   const days = getSelectedMonthDays();
   const percentageSum = days.reduce((sum, day) => sum + day.percentage, 0);
+  const percentageWithoutDowntimeSum = days.reduce((sum, day) => (
+    sum + day.percentageWithoutDowntime
+  ), 0);
   const average = days.length > 0 ? round(percentageSum / days.length) : 0;
+  const averageWithoutDowntime = days.length > 0
+    ? round(percentageWithoutDowntimeSum / days.length)
+    : 0;
+  const productionTimeTotal = days.reduce((sum, day) => sum + day.productionTime, 0);
   const setupTimeTotal = days.reduce((sum, day) => sum + day.setupTime, 0);
   const downtimeTotal = days.reduce((sum, day) => sum + day.downtime, 0);
   const selectedMonthName = monthNames[Number(monthSelect.value) - 1];
 
   monthAverageOutput.textContent = `${average}%`;
+  monthAverageWithoutDowntimeOutput.textContent = `${averageWithoutDowntime}%`;
   activeDaysOutput.textContent = days.length;
+  productionTimeTotalOutput.textContent = formatMinutes(productionTimeTotal);
   setupTimeTotalOutput.textContent = formatMinutes(setupTimeTotal);
   downtimeTotalOutput.textContent = formatMinutes(downtimeTotal);
   chartTitle.textContent = `${selectedMonthName} ${yearSelect.value}`;
-  backToApp.href = `index.html?date=${yearSelect.value}-${monthSelect.value}-01`;
+  backToApp.href = "index.html";
   chartContent.innerHTML = "";
 
   if (days.length === 0) {
