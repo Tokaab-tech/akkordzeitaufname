@@ -1,9 +1,10 @@
-const cacheName = "akkordzeit-v19";
+const cacheName = "akkordzeit-v20";
 const appFiles = [
   "./",
   "./index.html",
   "./monthly.html",
   "./styles.css",
+  "./theme.js",
   "./app.js",
   "./monthly.js",
   "./vendor/zxing-browser.min.js",
