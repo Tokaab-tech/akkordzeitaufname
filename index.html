@@ -32,10 +32,16 @@
       </section>
 
       <form id="workForm" class="entry-form">
-        <label>
-          Datum
-          <input id="date" name="date" type="date" required>
-        </label>
+        <div class="date-line">
+          <label>
+            Datum
+            <input id="date" name="date" type="date" required>
+          </label>
+          <output id="dailyAvailableTime" class="daily-available-time">
+            <span>Tages-Arbeitszeit</span>
+            <strong>420 min</strong>
+          </output>
+        </div>
 
         <button type="button" id="calendarToggle" class="calendar-toggle" aria-expanded="false" aria-controls="calendarPanel">
           Monatsübersicht anzeigen
@@ -101,9 +107,12 @@
 
           <label>
             Arbeitszeit
-            <div class="unit-input">
-              <input id="availableTime" name="availableTime" type="number" min="0" step="1" inputmode="numeric" value="420">
-              <span>min</span>
+            <div class="available-time-control">
+              <div class="unit-input">
+                <input id="availableTime" name="availableTime" type="number" min="0" step="1" inputmode="numeric" value="420">
+                <span>min</span>
+              </div>
+              <button type="button" id="applyAvailableTimeToDay" class="field-action">Edit</button>
             </div>
           </label>
         </div>

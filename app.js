@@ -13,7 +13,9 @@ const inputs = {
 const totalTimeOutput = document.querySelector("#totalTime");
 const percentageOutput = document.querySelector("#percentage");
 const statusBadge = document.querySelector("#statusBadge");
+const dailyAvailableTimeOutput = document.querySelector("#dailyAvailableTime strong");
 const saveButton = document.querySelector("#saveEntry");
+const applyAvailableTimeToDayButton = document.querySelector("#applyAvailableTimeToDay");
 const clearButton = document.querySelector("#clearEntries");
 const entryList = document.querySelector("#entryList");
 const exportBackupButton = document.querySelector("#exportBackup");
@@ -100,6 +102,24 @@ function calculateEntry() {
   };
 }
 
+function recalculateEntryForAvailableTime(entry, availableTime) {
+  const totalTime = round(
+    toNumber(entry.quantity) * toNumber(entry.timePerPart)
+    + toNumber(entry.setupTime)
+    + toNumber(entry.downtime),
+  );
+  const percentage = availableTime > 0
+    ? round((totalTime / availableTime) * 100 * performanceFactor)
+    : 0;
+
+  return {
+    ...entry,
+    availableTime,
+    totalTime,
+    percentage,
+  };
+}
+
 function hasDraftEntry() {
   return toNumber(inputs.quantity.value) > 0
     || toNumber(inputs.timePerPart.value) > 0
@@ -180,6 +200,7 @@ function updateResults() {
   totalTimeOutput.textContent = formatMinutes(dayTotal.totalTime);
   percentageOutput.textContent = `${dayTotal.percentage}%`;
   statusBadge.textContent = `Ø ${getMonthlyAveragePercentage(selectedDate, draftTotal)}%`;
+  updateDailyAvailableTimeDisplay();
   monthlyOverviewLink.href = `monthly.html?date=${encodeURIComponent(selectedDate)}`;
 }
 
@@ -233,6 +254,20 @@ function saveEntriesByDate(entriesByDate) {
 function getEntriesForDate(date) {
   const entriesByDate = loadEntriesByDate();
   return entriesByDate[date] || [];
+}
+
+function getAvailableTimeForDate(date) {
+  const [firstEntry] = getEntriesForDate(date);
+  const savedAvailableTime = toNumber(firstEntry?.availableTime);
+  return savedAvailableTime > 0 ? savedAvailableTime : 420;
+}
+
+function syncAvailableTimeFromDate() {
+  inputs.availableTime.value = getAvailableTimeForDate(inputs.date.value);
+}
+
+function updateDailyAvailableTimeDisplay() {
+  dailyAvailableTimeOutput.textContent = `${toNumber(inputs.availableTime.value) || 420} min`;
 }
 
 function getEntriesForMonth(monthKey) {
@@ -410,6 +445,37 @@ function deleteEntry(date, entryId) {
   updateResults();
 }
 
+function applyAvailableTimeToDayEntries() {
+  const selectedDate = inputs.date.value;
+  const availableTime = toNumber(inputs.availableTime.value);
+
+  if (availableTime <= 0) {
+    alert("Bitte zuerst eine Arbeitszeit größer als 0 Minuten eingeben.");
+    return;
+  }
+
+  const entriesByDate = loadEntriesByDate();
+  const entries = entriesByDate[selectedDate] || [];
+
+  if (entries.length === 0) {
+    alert("Für dieses Datum sind noch keine Einträge gespeichert.");
+    return;
+  }
+
+  const shouldApply = confirm(`Alle Einträge vom ${formatDisplayDate(selectedDate)} mit ${availableTime} Minuten Arbeitszeit neu berechnen?`);
+  if (!shouldApply) {
+    return;
+  }
+
+  entriesByDate[selectedDate] = entries.map((entry) => (
+    recalculateEntryForAvailableTime(entry, availableTime)
+  ));
+  saveEntriesByDate(entriesByDate);
+  renderEntries();
+  updateResults();
+  alert("Tageseinträge wurden angepasst.");
+}
+
 function saveCurrentEntry() {
   if (!hasDraftEntry()) {
     return;
@@ -496,6 +562,7 @@ function renderCalendar() {
 
     button.addEventListener("click", () => {
       inputs.date.value = date;
+      syncAvailableTimeFromDate();
       renderEntries();
       renderCalendar();
       updateResults();
@@ -515,6 +582,7 @@ function changeSelectedMonth(offset) {
     target.getMonth(),
     Math.min(day, daysInTargetMonth),
   );
+  syncAvailableTimeFromDate();
   renderEntries();
   renderCalendar();
   updateResults();
@@ -929,11 +997,13 @@ async function startScannerWithFallback(targetName) {
 
 form.addEventListener("input", updateResults);
 inputs.date.addEventListener("change", () => {
+  syncAvailableTimeFromDate();
   renderEntries();
   renderCalendar();
   updateResults();
 });
 saveButton.addEventListener("click", saveCurrentEntry);
+applyAvailableTimeToDayButton.addEventListener("click", applyAvailableTimeToDayEntries);
 clearButton.addEventListener("click", () => {
   const selectedDate = inputs.date.value;
   const entriesByDate = loadEntriesByDate();
@@ -980,6 +1050,7 @@ noteEditorDialog.addEventListener("cancel", (event) => {
 });
 
 setToday();
+syncAvailableTimeFromDate();
 updateResults();
 renderEntries();
 renderCalendar();
